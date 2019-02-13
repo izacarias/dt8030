@@ -27,22 +27,24 @@ import paho.mqtt.client as mqtt
 # You need to edit this block of variables to run your script
 #    Description:
 #    
-#  - ssl_private_key_filepath:
-#      The path to the 
-#  - ssl_algorithm = 'RS256' # Either RS256 or ES256
-#  - root_cert_filepath = '/home/pi/roots.pem'
-#  - project_id = 'dt8030-iulzac'
-#  - gcp_location = 'europe-west1'
-#  - registry_id = 'raspberry-pi'
-#  - device_id = 'resp1'
+#  - ssl_private_key_filepath: The complete path to the private key file
+#  - ssl_algorithm: Either RS256 or ES256. We normally use RS256, but it 
+#                   depends on how do you had generated the digital
+#                   certificate
+#  - root_cert_filepath: The complete path to the Google Root 
+#                        certificate
+#  - project_id: Your project ID
+#  - gcp_location: The region used when the registry was created
+#  - registry_id: The ID of the device registry
+#  - device_id: The ID of the device
 
-ssl_private_key_filepath = '/home/pi/demo_private.pem'
-ssl_algorithm = 'RS256' # Either RS256 or ES256
-root_cert_filepath = '/home/pi/roots.pem'
-project_id = 'dt8030-iulzac'
-gcp_location = 'europe-west1'
-registry_id = 'raspberry-pi'
-device_id = 'resp1'
+ssl_private_key_filepath = ''   # /home/pi/demo_private.pem
+ssl_algorithm = ''              # RS256
+root_cert_filepath = ''         # /home/pi/roots.pem
+project_id = ''                 # your project ID
+gcp_location = ''               # europe-west1
+registry_id = ''                # the registry name (raspberry-pi)
+device_id = ''                  # the device ID (rasp1)
 ########################################################################
 
 ########################################################################
