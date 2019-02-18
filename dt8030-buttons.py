@@ -119,7 +119,7 @@ while True:
           btn_pressed = "m"
           
         ## create the message (JSON format)
-        payload = '{{ "ts": {}, "button": {} }}'.format(int(time.time()), btn_pressed)
+        payload = '{{ "ts": {}, "button": "{}" }}'.format(int(time.time()), btn_pressed)
         ## send the data to the Cloud
         client.publish(_MQTT_TOPIC, payload, qos=1)
         
