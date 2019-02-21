@@ -39,13 +39,13 @@ from sense_hat import SenseHat
 #  - registry_id: The ID of the device registry
 #  - device_id: The ID of the device
 
-ssl_private_key_filepath = '/home/pi/demo_private.pem'
-ssl_algorithm = 'RS256'
-root_cert_filepath = '/home/pi/roots.pem'
-project_id = 'dt8030-iulzac'
-gcp_location = 'europe-west1'
-registry_id = 'raspberry-pi'
-device_id = 'rasp1'
+ssl_private_key_filepath = ''   # /home/pi/demo_private.pem
+ssl_algorithm = ''              # RS256
+root_cert_filepath = ''         # /home/pi/roots.pem
+project_id = ''                 # your project ID
+gcp_location = ''               # europe-west1
+registry_id = ''                # the registry name (raspberry-pi)
+device_id = ''                  # the device ID (rasp1)
 ########################################################################
 
 ########################################################################
