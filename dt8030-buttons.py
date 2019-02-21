@@ -1,16 +1,16 @@
 ###
-# Copyright 2017, Google, Inc.
-# Licensed under the Apache License, Version 2.0 (the `License`);
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an `AS IS` BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+ # Copyright 2017, Google, Inc.
+ # Licensed under the Apache License, Version 2.0 (the `License`);
+ # you may not use this file except in compliance with the License.
+ # You may obtain a copy of the License at
+ #
+ #    http://www.apache.org/licenses/LICENSE-2.0
+ #
+ # Unless required by applicable law or agreed to in writing, software
+ # distributed under the License is distributed on an `AS IS` BASIS,
+ # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ # See the License for the specific language governing permissions and
+ # limitations under the License.
 ###
 
 #!/usr/bin/python
@@ -39,14 +39,14 @@ from sense_hat import SenseHat
 #  - registry_id: The ID of the device registry
 #  - device_id: The ID of the device
 
-ssl_private_key_filepath = ''   # /home/pi/demo_private.pem
-ssl_algorithm = ''              # RS256
-root_cert_filepath = ''         # /home/pi/roots.pem
-project_id = ''                 # your project ID
-gcp_location = ''               # europe-west1
-registry_id = ''                # the registry name (raspberry-pi)
-device_id = ''                  # the device ID (rasp1)
-########################################################################+
+ssl_private_key_filepath = '/home/pi/demo_private.pem'
+ssl_algorithm = 'RS256'
+root_cert_filepath = '/home/pi/roots.pem'
+project_id = 'dt8030-iulzac'
+gcp_location = 'europe-west1'
+registry_id = 'raspberry-pi'
+device_id = 'rasp1'
+########################################################################
 
 ########################################################################
 # This code is used to create a connection to the Google Cloud
@@ -55,51 +55,42 @@ device_id = ''                  # the device ID (rasp1)
 cur_time = datetime.datetime.utcnow()
 
 # Create the authentication token
-
-
 def create_jwt():
-    token = {
-        'iat': cur_time,
-        'exp': cur_time + datetime.timedelta(minutes=60),
-        'aud': project_id
-    }
-    # Read the private certificate file
-    with open(ssl_private_key_filepath, 'r') as f:
-        private_key = f.read()
-    # Encrypt the data for authentication
-    return jwt.encode(token, private_key, ssl_algorithm)
-
+  token = {
+      'iat': cur_time,
+      'exp': cur_time + datetime.timedelta(minutes=60),
+      'aud': project_id
+  }
+  # Read the private certificate file
+  with open(ssl_private_key_filepath, 'r') as f:
+    private_key = f.read()
+  # Encrypt the data for authentication
+  return jwt.encode(token, private_key, ssl_algorithm)
 
 # These variables are used to store the location of the corresponding
 # device and topic (URL)
-_CLIENT_ID = 'projects/{}/locations/{}/registries/{}/devices/{}'.format(
-    project_id, gcp_location, registry_id, device_id)
+_CLIENT_ID = 'projects/{}/locations/{}/registries/{}/devices/{}'.format(project_id, gcp_location, registry_id, device_id)
 _MQTT_TOPIC = '/devices/{}/events'.format(device_id)
 
-# Create a MQTT Client to connect to the cloud
+## Create a MQTT Client to connect to the cloud
 client = mqtt.Client(client_id=_CLIENT_ID)
-# Set the authentication details
+## Set the authentication details
 client.username_pw_set(
     username='unused',
     password=create_jwt())
 
-# These functions are used by the MQTT Client to show messages
-# - On error
-# - When connecting to the cloud
-# - When sending data to the cloud
-
-
+## These functions are used by the MQTT Client to show messages
+## - On error
+## - When connecting to the cloud
+## - When sending data to the cloud
 def error_str(rc):
-    return '{}: {}'.format(rc, mqtt.error_string(rc))
-
+  return '{}: {}'.format(rc, mqtt.error_string(rc))
 
 def on_connect(unusued_client, unused_userdata, unused_flags, rc):
-    print('on_connect', error_str(rc))
-
+  print('on_connect', error_str(rc))
 
 def on_publish(unused_client, unused_userdata, unused_mid):
-    print('on_publish')
-
+  print('on_publish')
 
 client.on_connect = on_connect
 client.on_publish = on_publish
@@ -112,69 +103,71 @@ client.loop_start()
 
 btn_pressed = "none"
 
-# This function is called in response to any stick event
-
-
+## This function is called in response to any stick event.
+## It detects the direction of the joystick move (Up/Down/Left/Right)
+## and send the event, plus the temperature, pressure and humidity to
+## the cloud using the MQTT protocol
 def stick_event(event):
-    global btn_pressed
-    if event.action == "pressed":
-        if event.direction == "up":
-            btn_pressed = "u"
-        elif event.direction == "down":
-            btn_pressed = "d"
-        elif event.direction == "left":
-            btn_pressed = "l"
-        elif event.direction == "right":
-            btn_pressed = "r"
-        elif event.direction == "middle":
-            btn_pressed = "m"
-    elif event.action == "released":
-        print("Joystick released")
+  global btn_pressed
+  if event.action == "pressed":
+    if event.direction == "up":
+      btn_pressed = "u"
+    elif event.direction == "down":
+      btn_pressed = "d"
+    elif event.direction == "left":
+      btn_pressed = "l"
+    elif event.direction == "right":
+      btn_pressed = "r"
+    elif event.direction == "middle":
+      btn_pressed = "m"
+    temperature = sense.get_temperature()
+    pressure = sense.get_pressure()
+    humidity = sense.get_humidity()
+    ## create the message (JSON format)
+    payload = '{{ "timestamp": {}, "button": "{}", "temperature":{}, "pressure":{}, "humidity":{} }}'.format(int(time.time()), btn_pressed, temperature, pressure, humidity)
+    ## send the data to the Cloud
+    client.publish(_MQTT_TOPIC, payload, qos=1)
+    
+    ## Print the event (just for debugging)
+    print("\n{}\n".format(payload))
 
-
-# Create an object to interact with the SenseHat
+## Create an object to interact with the SenseHat
 sense = SenseHat()
 
-# This code continually listen for a joystick event and triggers the
-# function stick_event() in respose to a joystick move/press
+## This code continually listen for a joystick event and triggers the
+## function stick_event() in respose to a joystick move/press
 sense.stick.direction_any = stick_event
 
 temperature = 0
 humidity = 0
 pressure = 0
 
-# Repeat this code until user press CTRL+C
+## Repeat this code until user press CTRL+C
+## This code will send data to the cloud periodically, and the interval
+## should be configured setting the value of DATA_INTERVAL bellow (in 
+## seconds)
+
+DATA_INTERVAL = 60 * 5
+
 while True:
-    try:
-        curr_temp = sense.get_temperature()
-        curr_pressure = sense.get_pressure()
-        curr_humidity = sense.get_humidity()
+  try:
+    temperature = sense.get_temperature()
+    pressure = sense.get_pressure()
+    humidity = sense.get_humidity()
 
-        if curr_temp == temperature and curr_humidity == humidity and \
-           curr_pressure == pressure and btn_pressed == "none":
+    ## create the message (JSON format)
+    payload = '{{ "timestamp": {}, "button": "{}", "temperature":{}, "pressure":{}, "humidity":{} }}'.format(int(time.time()), "none", temperature, pressure, humidity)
+    ## send the data to the Cloud
+    client.publish(_MQTT_TOPIC, payload, qos=1)
 
-            time.sleep(1)
-            continue
+    ## Print the event (just for debugging)
+    print("{}\n".format(payload))
 
-        temperature = curr_temp
-        humidity = curr_humidity
-        pressure = curr_pressure
+    time.sleep(DATA_INTERVAL)
+    sense.clear()
 
-        # create the message (JSON format)
-        payload = '{{ "timestamp": {}, "button": "{}", "temperature":{}, "pressure":{}, "humidity":{} }}'.format(
-            int(time.time()), btn_pressed, temperature, pressure, humidity)
-        # send the data to the Cloud
-        client.publish(_MQTT_TOPIC, payload, qos=1)
-
-        # Print the event (just for debugging)
-        print("{}\n".format(payload))
-
-        btn_pressed = "none"
-        time.sleep(60*10)
-        sense.clear()
-
-    except KeyboardInterrupt:
-        # Stop the Googgle Cloud Client when CTRL+C was pressed
-        client.loop_stop()
-        print("Closing.")
-        sys.exit(0)
+  except KeyboardInterrupt:
+    ## Stop the Googgle Cloud Client when CTRL+C was pressed
+    client.loop_stop()
+    print("Closing.")
+    sys.exit(0)
