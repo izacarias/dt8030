@@ -15,12 +15,12 @@
 
 #!/usr/bin/python
 
-from sense_hat import SenseHat
 import datetime
-import time
 import jwt
-import sys
 import paho.mqtt.client as mqtt
+import sys
+import time
+from sense_hat import SenseHat
 
 
 ########################################################################
@@ -46,7 +46,7 @@ project_id = ''                 # your project ID
 gcp_location = ''               # europe-west1
 registry_id = ''                # the registry name (raspberry-pi)
 device_id = ''                  # the device ID (rasp1)
-########################################################################
+########################################################################+
 
 ########################################################################
 # This code is used to create a connection to the Google Cloud
@@ -104,67 +104,77 @@ def on_publish(unused_client, unused_userdata, unused_mid):
 client.on_connect = on_connect
 client.on_publish = on_publish
 client.tls_set(ca_certs=root_cert_filepath)
-client.connect('mqtt.googleapis.com', 8883)
+client.connect('mqtt.googleapis.com', port=8883, keepalive=60)
 client.loop_start()
+
+########################################################################
+# Joystick callback
+
+btn_pressed = "none"
+
+# This function is called in response to any stick event
+
+
+def stick_event(event):
+    global btn_pressed
+    if event.action == "pressed":
+        if event.direction == "up":
+            btn_pressed = "u"
+        elif event.direction == "down":
+            btn_pressed = "d"
+        elif event.direction == "left":
+            btn_pressed = "l"
+        elif event.direction == "right":
+            btn_pressed = "r"
+        elif event.direction == "middle":
+            btn_pressed = "m"
+    elif event.action == "released":
+        print("Joystick released")
+
 
 # Create an object to interact with the SenseHat
 sense = SenseHat()
 
-
-# Detecting button press using senseHat API
-sense.stick.direction_any = joystick_event
+# This code continually listen for a joystick event and triggers the
+# function stick_event() in respose to a joystick move/press
+sense.stick.direction_any = stick_event
 
 temperature = 0
 humidity = 0
 pressure = 0
 
-button_pressed = "none"
-
-
-def joystick_event(event):
-    global button_pressed
-    if event.action == 'pressed':
-        if event.direction == "up":
-            button_pressed = "u"
-        elif event.direction == "down":
-            button_pressed = "d"
-        elif event.direction == "left":
-            button_pressed = "l"
-        elif event.direction == "right":
-            button_pressed = "r"
-        elif event.direction == "middle":
-            button_pressed = "m"
-    elif event.action == 'released':
-        print('Button released')
-
-
 # Repeat this code until user press CTRL+C
 while True:
     try:
-        cur_temp = sense.get_temperature()
-        cur_pressure = sense.get_pressure()
-        cur_humidity = sense.get_humidity()
+        curr_temp = sense.get_temperature()
+        curr_pressure = sense.get_pressure()
+        curr_humidity = sense.get_humidity()
 
-        if cur_temp == temperature and cur_humidity == humidity and cur_pressure == pressure and button_pressed == "none":
+        if curr_temp == temperature and curr_humidity == humidity and \
+           curr_pressure == pressure and btn_pressed == "none":
+
             time.sleep(1)
             continue
 
-        temperature = cur_temp
-        pressure = cur_pressure
-        humidity = cur_humidity
-        button = button_pressed
-        button_pressed = "none"
+        temperature = curr_temp
+        humidity = curr_humidity
+        pressure = curr_pressure
 
-        payload = '{{ "timestamp": {}, "button": "{}", "temperature": {}, "pressure": {}, "humidity": {} }}'.format(
-            int(time.time()), button, temperature, pressure, humidity)
-
-        # Uncomment following line when ready to publish
+        # create the message (JSON format)
+        payload = '{{ "timestamp": {}, "button": "{}", "temperature":{}, "pressure":{}, "humidity":{} }}'.format(
+            int(time.time()), btn_pressed, temperature, pressure, humidity)
+        # send the data to the Cloud
         client.publish(_MQTT_TOPIC, payload, qos=1)
 
+        # Print the event (just for debugging)
         print("{}\n".format(payload))
-        time.sleep(10)
+
+        btn_pressed = "none"
+        time.sleep(60*10)
+        sense.clear()
 
     except KeyboardInterrupt:
         # Stop the Googgle Cloud Client when CTRL+C was pressed
         client.loop_stop()
+        print("Closing.")
         sys.exit(0)
