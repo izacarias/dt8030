@@ -114,8 +114,12 @@ sense = SenseHat()
 
 
 # Repeat this code until user press CTRL+C
-# This code will send data to the cloud periodically, in a high data 
-# rate.
+# This code will send data to the cloud periodically.
+#  Set the DATA_INTERVAL to 0 (zero) to get the highest data 
+# rate possible. 
+# Set the DATA_INTERVAL to a value greather than zero to 
+# set the interval between each iteraction (10s by default)
+DATA_INTERVAL = 10
 
 while True:
 
@@ -138,6 +142,9 @@ while True:
 
         # Print the event (just for debugging)
         print("{}\n".format(payload))
+
+        if DATA_INTERVAL > 0:
+            time.sleep(DATA_INTERVAL)
 
     except KeyboardInterrupt:
         # Stop the Googgle Cloud Client when CTRL+C was pressed
