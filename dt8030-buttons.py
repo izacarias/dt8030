@@ -54,9 +54,17 @@ device_id = ''                  # the device ID (rasp1)
 # Get the current time (UTC)
 cur_time = datetime.datetime.utcnow()
 
+
+# Blink a LED each sensor read
+led_red = (255, 0, 0)
+led_off = (0, 0, 0)
+def blink_let(senseObj):
+    senseObj.set_pixel(1, 1, led_red)
+    time.sleep(0.2)
+    senseObj.set_pixel(1, 1, led_off)
+    
+    
 # Create the authentication token
-
-
 def create_jwt():
     token = {
         'iat': cur_time,
