@@ -67,7 +67,7 @@ cur_time = datetime.datetime.utcnow()
 def create_jwt():
     token = {
         'iat': cur_time,
-        'exp': cur_time + datetime.timedelta(minutes=60),
+        'exp': cur_time + datetime.timedelta(hours=24),
         'aud': project_id
     }
     # Read the private certificate file
