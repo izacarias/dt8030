@@ -39,19 +39,29 @@ from sense_hat import SenseHat
 #  - registry_id: The ID of the device registry
 #  - device_id: The ID of the device
 
-ssl_private_key_filepath = '/home/pi/demo_private.pem'
-ssl_algorithm = 'RS256'
-root_cert_filepath = '/home/pi/roots.pem'
-project_id = 'dt8030-iulzac'
-gcp_location = 'europe-west1'
-registry_id = 'raspberry-pi-2'
-device_id = 'rasp2'
+ssl_private_key_filepath = ''   # /home/pi/demo_private.pem
+ssl_algorithm = ''              # RS256
+root_cert_filepath = ''         # /home/pi/roots.pem
+project_id = ''                 # your project ID
+gcp_location = ''               # europe-west1
+registry_id = ''                # the registry name (raspberry-pi-2)
+device_id = ''                  # the device ID (rasp2)
 ########################################################################
 
-########################################################################
+# Blink a LED each sensor read
+led_red = (255, 0, 0)
+led_off = (0, 0, 0)
+
+
+def blink_led():
+    global sense
+    sense.set_pixel(0, 0, led_red)
+    time.sleep(0.2)
+    sense.set_pixel(0, 0, led_off)
 
 ########################################################################
 # This code is used to create a connection to the Google Cloud
+
 
 # Get the current time (UTC)
 cur_time = datetime.datetime.utcnow()
@@ -115,24 +125,25 @@ sense = SenseHat()
 
 # Repeat this code until user press CTRL+C
 # This code will send data to the cloud periodically.
-#  Set the DATA_INTERVAL to 0 (zero) to get the highest data 
-# rate possible. 
-# Set the DATA_INTERVAL to a value greather than zero to 
-# set the interval between each iteraction (10s by default)
-DATA_INTERVAL = 10
+# Set the DATA_INTERVAL to 0 (zero) to get the highest data
+# rate possible.
+# Set the DATA_INTERVAL to a value greather than zero to
+# set the interval between each iteraction.
+# The interval is configured to 0 by default
+DATA_INTERVAL = 0
 
 while True:
 
     try:
+        # Blink a let before each sensor read
+        if DATA_INTERVAL > 0:
+            blink_led()
+
         acceleration = sense.get_accelerometer_raw()
         x = acceleration['x']
         y = acceleration['y']
         z = acceleration['z']
         direction = sense.get_compass()
-        
-        x = round(x, 0)
-        y = round(y, 0)
-        z = round(z, 0)
 
         # create the message (JSON format)
         payload = '{{ "timestamp": {}, "device_id": "{}", "accel_x":{}, "accel_y":{}, "accel_z":{}, "direction":{} }}'.format(

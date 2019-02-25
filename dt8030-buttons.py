@@ -48,23 +48,21 @@ registry_id = ''                # the registry name (raspberry-pi)
 device_id = ''                  # the device ID (rasp1)
 ########################################################################
 
-########################################################################
-# This code is used to create a connection to the Google Cloud
-
-# Get the current time (UTC)
-cur_time = datetime.datetime.utcnow()
-
-
 # Blink a LED each sensor read
 led_red = (255, 0, 0)
 led_off = (0, 0, 0)
 def blink_led():
     global sense
-    sense.set_pixel(1, 1, led_red)
+    sense.set_pixel(0, 0, led_red)
     time.sleep(0.2)
-    sense.set_pixel(1, 1, led_off)
-    
+    sense.set_pixel(0, 0, led_off)
 
+########################################################################
+# This code is used to create a connection to the Google Cloud
+
+# Get the current time (UTC)
+cur_time = datetime.datetime.utcnow()
+    
 # Create the authentication token
 def create_jwt():
     token = {
